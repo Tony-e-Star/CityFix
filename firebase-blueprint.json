@@ -1,0 +1,107 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account profile details including gamification progress, saved location, and vouch history.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The Firestore document ID, matching the user's Auth UID." },
+        "email": { "type": "string", "description": "User's registered email address." },
+        "name": { "type": "string", "description": "Display name of the user." },
+        "photoURL": { "type": "string", "description": "Profile picture URL." },
+        "points": { "type": "integer", "description": "Lifetime reputation points (XP)." },
+        "badges": { "type": "array", "description": "List of earned badge strings (e.g., First Resp, Civic Vett)." },
+        "vouchedIds": { "type": "array", "description": "Array of report IDs that this user has ever vouched for." },
+        "savedLocation": {
+          "type": "object",
+          "description": "User's configured base location.",
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" },
+            "address": { "type": "string" },
+            "district": { "type": "string" },
+            "ward": { "type": "string" }
+          }
+        },
+        "weeklyQuests": {
+          "type": "object",
+          "description": "The user's weekly quest status.",
+          "properties": {
+            "quest1Progress": { "type": "integer", "description": "Number of public hazard reports filed this week." },
+            "quest2Progress": { "type": "integer", "description": "Number of neighbor reports vouched for this week." },
+            "quest3Progress": { "type": "integer", "description": "Number of pothole or garbage overflow reports filed this week." },
+            "lastResetTime": { "type": "string", "description": "ISO timestamp indicating when the progress was last reset/tracked." }
+          }
+        }
+      },
+      "required": ["id", "email", "name", "points", "badges", "vouchedIds"]
+    },
+    "Report": {
+      "title": "Civic Report",
+      "description": "A public utility issue or infrastructure hazard reported by a citizen.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique report ID." },
+        "category": { "type": "string", "description": "The hazard type (e.g., pothole, garbage_overflow, streetlight_issue)." },
+        "confidence": { "type": "integer", "description": "Computer vision verification confidence score." },
+        "description": { "type": "string", "description": "Citizen-provided detailed description." },
+        "status": { "type": "string", "description": "State of the report (e.g., Pending Approval, Submitted, In Review, Resolved, Flagged)." },
+        "latitude": { "type": "number", "description": "Latitude coordinate." },
+        "longitude": { "type": "number", "description": "Longitude coordinate." },
+        "address": { "type": "string", "description": "Reverse-geocoded physical address." },
+        "district": { "type": "string", "description": "The derived civic district." },
+        "imageData": { "type": "string", "description": "Visual evidence (base64 data URI)." },
+        "imageHash": { "type": "string", "description": "SHA-256 hash of the image to prevent duplicate submissions." },
+        "createdAt": { "type": "string", "description": "ISO timestamp when submitted." },
+        "userId": { "type": "string", "description": "The Firestore User document ID of the reporter." },
+        "userEmail": { "type": "string", "description": "Obfuscated or raw email of the reporter." },
+        "vouchCount": { "type": "integer", "description": "Number of citizen vouches." },
+        "vouchedUserIds": { "type": "array", "description": "List of User UIDs who have vouched for this report." },
+        "flagCount": { "type": "integer", "description": "Number of spam flags." },
+        "assignedDepartment": { "type": "string", "description": "SLA assigned municipal division." },
+        "slaDurationDays": { "type": "integer" },
+        "slaDueDate": { "type": "string" },
+        "severity": { "type": "string" },
+        "landmarks": { "type": "string" },
+        "urgencyCues": { "type": "array" },
+        "timeline": { "type": "array", "description": "Chronological log of state updates." },
+        "comments": { "type": "array", "description": "Discussion thread on the issue." }
+      },
+      "required": ["id", "category", "status", "latitude", "longitude", "address", "createdAt", "userId"]
+    },
+    "Poll": {
+      "title": "Community Priority Poll",
+      "description": "Active community nominations representing high-priority repair items.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The Poll ID (typically matching the reportId)." },
+        "reportId": { "type": "string", "description": "The referenced report ID." },
+        "category": { "type": "string" },
+        "address": { "type": "string" },
+        "district": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "nominatedAt": { "type": "string", "description": "ISO timestamp of nomination." },
+        "nominatedByUserId": { "type": "string", "description": "User ID of the nominator." },
+        "voterUserIds": { "type": "array", "description": "List of user IDs who have voted for this poll." },
+        "voteCount": { "type": "integer", "description": "Number of unique votes." },
+        "status": { "type": "string", "enum": ["active", "resolved", "expired"], "description": "Active state or resolution status." }
+      },
+      "required": ["id", "reportId", "nominatedAt", "nominatedByUserId", "voterUserIds", "voteCount", "status"]
+    }
+  },
+  "firestore": {
+    "users": {
+      "schema": "User",
+      "description": "Collection of registered civic guardians."
+    },
+    "reports": {
+      "schema": "Report",
+      "description": "Collection of logged utility hazards and public works reports."
+    },
+    "polls": {
+      "schema": "Poll",
+      "description": "Collection of active community priority polls and nominations."
+    }
+  }
+}

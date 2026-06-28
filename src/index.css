@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght=500;650;700&family=Inter:wght@400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-card: #16161d;
+  --accent-alert: #ff3b30;
+  --accent-info: #3b82f6;
+  --accent-success: #30d158;
+  --text-primary: #f5f5f7;
+  --text-muted: #8e8e93;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-display: "Oswald", sans-serif;
+  
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-card: var(--bg-card);
+  --color-accent-alert: var(--accent-alert);
+  --color-accent-info: var(--accent-info);
+  --color-accent-success: var(--accent-success);
+  --color-text-primary: var(--text-primary);
+  --color-text-muted: var(--text-muted);
+}
+
+/* Custom CSS to handle leaflet container and scroll behaviors safely on mobile notches */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* Customize mobile scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 9999px;
+}
+
+/* Hide scrollbar utility */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Force tap-target highlight removal for touch feeling */
+button, select, input, a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Pulsing map pin keyframes and styling */
+@keyframes map-pulse {
+  0% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 12px rgba(255, 59, 48, 0);
+  }
+  100% {
+    transform: scale(0.9);
+    box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
+  }
+}
+
+.glow-pin-alert {
+  width: 14px;
+  height: 14px;
+  background-color: #ff3b30;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  animation: map-pulse 2s infinite;
+  display: block;
+}
+
+.glow-pin-info {
+  width: 12px;
+  height: 12px;
+  background-color: #3b82f6;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+  display: block;
+}
+
+.glow-pin-success {
+  width: 12px;
+  height: 12px;
+  background-color: #30d158;
+  border: 2px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(48, 209, 88, 0.6);
+  display: block;
+}
+
+/* Custom styling for Leaflet popups to match Citizen dark card theme */
+.leaflet-popup-content-wrapper {
+  background: #16161d !important;
+  color: #f5f5f7 !important;
+  border-radius: 6px !important;
+  border: 1px solid #27272a !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.5) !important;
+}
+
+.leaflet-popup-tip {
+  background: #16161d !important;
+  border: 1px solid #27272a !important;
+}
+
+.leaflet-popup-close-button {
+  color: #8e8e93 !important;
+}
+

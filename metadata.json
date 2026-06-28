@@ -1,0 +1,11 @@
+{
+  "name": "Remix: CityFix",
+  "description": "A responsive citizen reporter mobile-ready tool with Leaflet.js maps, HTML camera/video captures, secure backend duplicate-logs, and severe AI pothole/streetlight classification filters.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
