@@ -3443,7 +3443,16 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, name, photoURL }),
       });
-      const data = await res.json();
+      
+      const responseText = await res.text();
+      let data: any = {};
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (parseErr) {
+        console.error("Failed to parse response as JSON:", responseText);
+        throw new Error(`Server returned a non-JSON response (Status ${res.status}). The server might be misconfigured, offline, or returning an HTML error page. Response prefix: ${responseText.slice(0, 100)}`);
+      }
+
       if (res.ok && data.success) {
         setCurrentUser(data.user);
         setAuthToken(data.token);
@@ -3455,7 +3464,7 @@ export default function App() {
         setAuthName("");
         fetchDbUsers();
       } else {
-        setAuthError(data.error || "Google authentication failed on server.");
+        setAuthError(data.error || `Google authentication failed on server (Status ${res.status}).`);
       }
     } catch (err: any) {
       console.error("Google Sign-In Error:", err);
