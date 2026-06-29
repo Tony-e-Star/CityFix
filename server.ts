@@ -329,36 +329,6 @@ function loadUsers(): User[] {
   // Initial seed users
   const initialUsers: User[] = [
     {
-      id: "USR-alex",
-      email: "alex@example.com",
-      name: "Alex Mercer",
-      passwordHash: hashPassword("password123", "salt_alex"),
-      passwordSalt: "salt_alex",
-      createdAt: new Date().toISOString(),
-      points: 1820,
-      badges: ["First Resp", "Civic Vett", "Fix Hero"]
-    },
-    {
-      id: "USR-satoshi",
-      email: "satoshi@example.com",
-      name: "Satoshi K.",
-      passwordHash: hashPassword("password123", "salt_satoshi"),
-      passwordSalt: "salt_satoshi",
-      createdAt: new Date().toISOString(),
-      points: 1250,
-      badges: ["Civic Vett", "Overlord"]
-    },
-    {
-      id: "USR-jane",
-      email: "jane@example.com",
-      name: "Jane Doe",
-      passwordHash: hashPassword("password123", "salt_jane"),
-      passwordSalt: "salt_jane",
-      createdAt: new Date().toISOString(),
-      points: 380,
-      badges: ["First Resp"]
-    },
-    {
       id: "USR-11111111111",
       email: "test@example.com",
       name: "Test User",
@@ -748,46 +718,51 @@ app.post("/api/auth/login", (req, res) => {
 });
 
 app.post("/api/auth/google", (req, res) => {
-  const { email, name, photoURL, loginMethod } = req.body;
-  if (!email) {
-    return res.status(400).json({ error: "Missing email address from Google authentication." });
+  try {
+    const { email, name, photoURL, loginMethod } = req.body;
+    if (!email) {
+      return res.status(400).json({ error: "Missing email address from Google authentication." });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    let user = users.find(u => u.email === normalizedEmail);
+
+    if (!user) {
+      // Auto-create profile if first time logging in with Google/Firebase
+      const userId = `USR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const displayName = name || normalizedEmail.split("@")[0].split(/[._-]/).map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+      
+      user = {
+        id: userId,
+        email: normalizedEmail,
+        name: displayName,
+        photoURL: photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${displayName}`,
+        createdAt: new Date().toISOString(),
+        points: 0,
+        badges: ["First Resp"],
+        loginMethod: loginMethod || "Google"
+      };
+      users.push(user);
+      saveUsers(users);
+    } else {
+      user.loginMethod = loginMethod || user.loginMethod || "Google";
+      saveUsers(users);
+    }
+
+    const token = `auth_token_${user.id}_${crypto.randomBytes(8).toString("hex")}`;
+    tokenToUserMap.set(token, user.id);
+
+    const { points, badges } = calculateUserPoints(user.id, reports);
+
+    res.json({
+      success: true,
+      user: { id: user.id, email: user.email, name: user.name, photoURL: user.photoURL, points, badges, savedLocation: user.savedLocation },
+      token
+    });
+  } catch (err: any) {
+    console.error("Error in /api/auth/google endpoint:", err);
+    res.status(500).json({ error: err.message || "Internal server error." });
   }
-
-  const normalizedEmail = email.toLowerCase().trim();
-  let user = users.find(u => u.email === normalizedEmail);
-
-  if (!user) {
-    // Auto-create profile if first time logging in with Google/Firebase
-    const userId = `USR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-    const displayName = name || normalizedEmail.split("@")[0].split(/[._-]/).map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
-    
-    user = {
-      id: userId,
-      email: normalizedEmail,
-      name: displayName,
-      photoURL: photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${displayName}`,
-      createdAt: new Date().toISOString(),
-      points: 0,
-      badges: ["First Resp"],
-      loginMethod: loginMethod || "Google"
-    };
-    users.push(user);
-    saveUsers(users);
-  } else {
-    user.loginMethod = loginMethod || user.loginMethod || "Google";
-    saveUsers(users);
-  }
-
-  const token = `auth_token_${user.id}_${crypto.randomBytes(8).toString("hex")}`;
-  tokenToUserMap.set(token, user.id);
-
-  const { points, badges } = calculateUserPoints(user.id, reports);
-
-  res.json({
-    success: true,
-    user: { id: user.id, email: user.email, name: user.name, photoURL: user.photoURL, points, badges, savedLocation: user.savedLocation },
-    token
-  });
 });
 
 app.get("/api/auth/me", (req, res) => {

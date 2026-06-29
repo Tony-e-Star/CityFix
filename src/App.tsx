@@ -231,6 +231,14 @@ const isThisWeek = (dateString: string | undefined): boolean => {
   return date.getTime() >= startOfWeek.getTime();
 };
 
+const getCurrentWeekNumber = (): number => {
+  const currentDate = new Date();
+  const startDate = new Date(currentDate.getFullYear(), 0, 1);
+  const days = Math.floor((currentDate.getTime() - startDate.getTime()) / (24 * 60 * 60 * 1000));
+  const weekNumber = Math.ceil((days + startDate.getDay() + 1) / 7);
+  return weekNumber;
+};
+
 export default function App() {
   // Navigation & UI tabs
   const [activeTab, setActiveTab] = useState<TabType>("home");
@@ -645,12 +653,7 @@ export default function App() {
 
   const leaderboard = useMemo(() => {
     // If we have a list of users from the database, map them.
-    // If the database users are empty, fall back to default seeds to avoid empty screens
-    const listToMap = dbUsers.length > 0 ? dbUsers : [
-      { id: "USR-alex", name: "Alex Mercer", points: 1820, badges: ["First Resp", "Civic Vett", "Fix Hero"], photoURL: undefined, createdAt: "2026-06-25T07:02:45.542Z" },
-      { id: "USR-satoshi", name: "Satoshi K.", points: 1250, badges: ["Civic Vett", "Overlord"], photoURL: undefined, createdAt: "2026-06-25T07:02:45.543Z" },
-      { id: "USR-jane", name: "Jane Doe", points: 380, badges: ["First Resp"], photoURL: undefined, createdAt: "2026-06-25T07:02:45.544Z" }
-    ];
+    const listToMap = dbUsers;
 
     const mapped = listToMap.map(u => {
       const isCurrentUser = currentUser && u.id === currentUser.id;
@@ -3370,7 +3373,15 @@ export default function App() {
         }),
       });
 
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: any = {};
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (parseErr) {
+        console.error("Failed to parse response as JSON:", responseText);
+        throw new Error(`Server returned status ${res.status}: ${responseText.slice(0, 150)}`);
+      }
+
       if (res.ok && data.success) {
         setCurrentUser(data.user);
         setAuthToken(data.token);
@@ -3428,7 +3439,15 @@ export default function App() {
         }),
       });
 
-      const data = await res.json();
+      const responseText = await res.text();
+      let data: any = {};
+      try {
+        data = responseText ? JSON.parse(responseText) : {};
+      } catch (parseErr) {
+        console.error("Failed to parse response as JSON:", responseText);
+        throw new Error(`Server returned status ${res.status}: ${responseText.slice(0, 150)}`);
+      }
+
       if (res.ok && data.success) {
         setCurrentUser(data.user);
         setAuthToken(data.token);
@@ -5958,7 +5977,7 @@ export default function App() {
                           {leaderboardTab === "nearby" ? "Based on 10km radius activity" : "Bounded within current administrative boundary"}
                         </span>
                       </div>
-                      <span className="text-[9px] text-accent-alert font-mono bg-accent-alert/10 px-2 py-0.5 border border-accent-alert/20 rounded font-bold">Week 25</span>
+                      <span className="text-[9px] text-accent-alert font-mono bg-accent-alert/10 px-2 py-0.5 border border-accent-alert/20 rounded font-bold">Week {getCurrentWeekNumber()}</span>
                     </div>
 
                     {/* Interactive Sub-tab Toggle */}

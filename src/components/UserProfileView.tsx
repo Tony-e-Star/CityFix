@@ -49,13 +49,7 @@ export default function UserProfileView({
     const found = dbUsers.find(u => u.id === userId);
     if (found) return found;
 
-    // 3. Fallback to default users if not fetched yet
-    const defaults = [
-      { id: "USR-alex", name: "Alex Mercer", points: 1820, badges: ["First Resp", "Civic Vett", "Fix Hero"] },
-      { id: "USR-satoshi", name: "Satoshi K.", points: 1250, badges: ["Civic Vett", "Overlord"] },
-      { id: "USR-jane", name: "Jane Doe", points: 380, badges: ["First Resp"] }
-    ];
-    return defaults.find(u => u.id === userId) || { id: userId, name: "Civic Resident", points: 0, badges: ["First Resp"] };
+    return { id: userId, name: "Civic Resident", points: 0, badges: ["First Resp"] };
   }, [userId, dbUsers, leaderboardTab, nearbyLeaderboard, districtLeaderboard]);
 
   const userEmail = useMemo(() => {
@@ -79,14 +73,6 @@ export default function UserProfileView({
     }
 
     const list = [...dbUsers];
-    // Include defaults if dbUsers is empty
-    if (list.length === 0) {
-      list.push(
-        { id: "USR-alex", name: "Alex Mercer", points: 1820, badges: ["First Resp", "Civic Vett", "Fix Hero"], createdAt: "2026-06-25T07:02:45.542Z" },
-        { id: "USR-satoshi", name: "Satoshi K.", points: 1250, badges: ["Civic Vett", "Overlord"], createdAt: "2026-06-25T07:02:45.543Z" },
-        { id: "USR-jane", name: "Jane Doe", points: 380, badges: ["First Resp"], createdAt: "2026-06-25T07:02:45.544Z" }
-      );
-    }
     
     // Filter out test/demo accounts
     const filtered = list.filter(u => {

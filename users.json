@@ -1,0 +1,15 @@
+[
+  {
+    "id": "USR-11111111111",
+    "email": "test@example.com",
+    "name": "Test User",
+    "passwordHash": "fe2722a587c7f9b58c104ae2b1384b92bd11f47a84c2ffd34b44df511e9182562422513bf5eaf5e7ef61eb3eea956f669f6511f7c9fddc92017187f6f1284145",
+    "passwordSalt": "default_salt_test",
+    "createdAt": "2026-06-29T12:37:30.799Z",
+    "points": 840,
+    "badges": [
+      "First Resp",
+      "Civic Vett"
+    ]
+  }
+]
