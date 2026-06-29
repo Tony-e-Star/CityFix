@@ -479,50 +479,7 @@ export default function App() {
     if (cached) {
       try { return JSON.parse(cached); } catch { return []; }
     }
-    // Pre-seed some mock reports for demo richness if empty
-    return [
-      {
-        id: "REP-1701345600000",
-        category: "pothole",
-        confidence: 94,
-        description: "Large deep pothole on the center lane of the main avenue, causing cars to swerve.",
-        status: "In Review",
-        latitude: 37.7849,
-        longitude: -122.4094,
-        address: "750 Market Street, San Francisco, CA 94102",
-        imageData: "MOCK_POTHOLE_IMAGE",
-        createdAt: new Date(Date.now() - 48 * 3600 * 1000).toISOString(),
-        isDuplicate: false,
-        imageHash: "mock_hash_1",
-        explanation: "AI classified pothole with high confidence due to clear road asphalt breakage and depth.",
-        vouchCount: 14,
-        timeline: [
-          { stage: "Submitted", time: new Date(Date.now() - 48 * 3600 * 1000).toISOString(), note: "Report successfully filed by citizen." },
-          { stage: "In Review", time: new Date(Date.now() - 47 * 3600 * 1000).toISOString(), note: "Municipality engineer assigned for physical on-site evaluation." }
-        ]
-      },
-      {
-        id: "REP-1701321200000",
-        category: "streetlight_issue",
-        confidence: 98,
-        description: "Entire streetlamp lamp head is unlit. Pitch black corridor at night.",
-        status: "Resolved",
-        latitude: 37.7649,
-        longitude: -122.4294,
-        address: "180 Guerrero Street, San Francisco, CA 94103",
-        imageData: "MOCK_STREETLIGHT_IMAGE",
-        createdAt: new Date(Date.now() - 120 * 3600 * 1000).toISOString(),
-        isDuplicate: false,
-        imageHash: "mock_hash_2",
-        explanation: "AI matched streetlight_issue with 98% confidence. Visible dead mercury luminaire.",
-        vouchCount: 32,
-        timeline: [
-          { stage: "Submitted", time: new Date(Date.now() - 120 * 3600 * 1000).toISOString(), note: "Report logged via smartphone camera pinpoint." },
-          { stage: "In Review", time: new Date(Date.now() - 118 * 3600 * 1000).toISOString(), note: "Public Works team confirmed outage schedule." },
-          { stage: "Resolved", time: new Date(Date.now() - 110 * 3600 * 1000).toISOString(), note: "Sodium vapor bulb replaced with energy-efficient LED fixture." }
-        ]
-      }
-    ];
+    return [];
   });
 
   // Gamification & Community states
@@ -918,9 +875,7 @@ export default function App() {
   
   // Real-time notifications inbox
   const [notifications, setNotifications] = useState<{ id: string; title: string; message: string; time: string; read: boolean }[]>([
-    { id: "noti-1", title: "Welcome back!", message: "Thank you for supporting community maintenance via AI-Dispatch.", time: "Just now", read: false },
-    { id: "noti-2", title: "Verification Achieved 🎉", message: "Pothole #REP-1701345600000 has been verified with 14 community vouches.", time: "2 hours ago", read: false },
-    { id: "noti-3", title: "System Ready", message: "You are currently Level 3 (Civic Sentinel) with 340 League XP.", time: "1 day ago", read: true }
+    { id: "noti-1", title: "Welcome back!", message: "Thank you for supporting community maintenance via AI-Dispatch.", time: "Just now", read: false }
   ]);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState<boolean>(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(false);
@@ -3850,6 +3805,12 @@ export default function App() {
         }}
         onLogout={handleLogout}
         onNavigate={(tab, filter) => {
+          if (filter === "mine" && !currentUser) {
+            setAuthMode("login");
+            setAuthError("Please sign in with Google to view and track your submitted civic reports.");
+            setAuthModalOpen(true);
+            return;
+          }
           setActiveTab(tab);
           if (filter) {
             setFeedFilter(filter);
@@ -5004,7 +4965,8 @@ export default function App() {
                 {(() => {
                   const filteredReports = reports.filter(r => {
                     if (feedFilter === "mine") {
-                      return r.userId === currentUser?.id;
+                      if (!currentUser) return false;
+                      return r.userId === currentUser.id;
                     }
                     if (isUsingIpFallback) return false;
                     if (!showAllDistricts) {
