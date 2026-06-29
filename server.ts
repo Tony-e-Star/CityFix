@@ -1162,7 +1162,7 @@ Instructions for Accuracy, Model Matching, and Safety:
       },
     };
 
-    const modelsToTry = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
+    const modelsToTry = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest"];
     let response: any = null;
     let lastError: any = null;
     let modelIndex = 0;
@@ -1218,12 +1218,12 @@ Instructions for Accuracy, Model Matching, and Safety:
           errMsg.includes("limit") || 
           errMsg.includes("exhausted");
         
-        console.warn(`Gemini API call with model ${currentModel} failed (attempt ${attempt + 1}/4): ${err.message}`);
+        console.info(`[Gemini Info] Model ${currentModel} status code ${errStatus || 'busy'} (attempt ${attempt + 1}/4)`);
         
         if (isTransient && attempt < 3) {
           modelIndex = (modelIndex + 1) % modelsToTry.length;
           const delay = (attempt + 1) * 1000;
-          console.warn(`Retrying with fallback model (${modelsToTry[modelIndex]}) in ${delay}ms...`);
+          console.info(`[Gemini Info] Retrying with fallback model (${modelsToTry[modelIndex]}) in ${delay}ms...`);
           await new Promise(resolve => setTimeout(resolve, delay));
         } else {
           break;

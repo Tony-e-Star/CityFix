@@ -313,7 +313,7 @@ Instructions:
 - If they explicitly confirm (saying YES, confirm, absolutely, etc.), mark 'isSubmitted' as true and state that the report is officially filed.
 - Always respond in the JSON format specified below. Do not include any other text except valid JSON.`;
 
-      const modelsToTry = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
+      const modelsToTry = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest"];
       let response: any = null;
       let lastError: any = null;
 
@@ -390,7 +390,7 @@ Instructions:
             
             if (isTransient && attempts < maxAttempts) {
               const delay = Math.pow(2, attempts - 1) * 1500; // 1.5s, 3s
-              console.warn(`Model ${modelName} failed with transient error. Retrying attempt ${attempts}/${maxAttempts - 1} in ${delay}ms...`, err);
+              console.info(`[Gemini Info] Model ${modelName} returned status ${errStatus || 'busy'}. Retrying attempt ${attempts}/${maxAttempts - 1} in ${delay}ms...`);
               await new Promise(resolve => setTimeout(resolve, delay));
             } else {
               break; // Try next model fallback
