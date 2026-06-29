@@ -136,11 +136,14 @@ if (fs.existsSync(configPath)) {
       }
     }
 
+    const projectId = process.env.VITE_FIREBASE_PROJECT_ID || (config.projectId && !config.projectId.includes("PLACEHOLDER") ? config.projectId : undefined);
+    const databaseId = process.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || (config.firestoreDatabaseId && !config.firestoreDatabaseId.includes("PLACEHOLDER") ? config.firestoreDatabaseId : undefined);
+
     admin.initializeApp({
       credential,
-      projectId: config.projectId,
+      projectId,
     });
-    db = getFirestore(undefined, config.firestoreDatabaseId);
+    db = getFirestore(undefined, databaseId);
     console.log("[Firebase] Admin SDK initialized successfully.");
   } catch (err) {
     console.error("[Firebase] Error initializing Admin SDK:", err);

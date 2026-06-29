@@ -1,10 +1,10 @@
 {
-  "projectId": "gen-lang-client-0729642948",
-  "appId": "1:686963895890:web:a60c0898e43e08fec6b98b",
-  "apiKey": "PLACEHOLDER_REPLACED_BY_VITE_FIREBASE_API_KEY",
-  "authDomain": "gen-lang-client-0729642948.firebaseapp.com",
-  "firestoreDatabaseId": "ai-studio-cityfix-17af1bde-78fb-4278-aa07-716fd5755227",
-  "storageBucket": "gen-lang-client-0729642948.firebasestorage.app",
-  "messagingSenderId": "686963895890",
+  "projectId": "PLACEHOLDER_VITE_FIREBASE_PROJECT_ID",
+  "appId": "PLACEHOLDER_VITE_FIREBASE_APP_ID",
+  "apiKey": "PLACEHOLDER_VITE_FIREBASE_API_KEY",
+  "authDomain": "PLACEHOLDER_VITE_FIREBASE_AUTH_DOMAIN",
+  "firestoreDatabaseId": "PLACEHOLDER_VITE_FIREBASE_FIRESTORE_DATABASE_ID",
+  "storageBucket": "PLACEHOLDER_VITE_FIREBASE_STORAGE_BUCKET",
+  "messagingSenderId": "PLACEHOLDER_VITE_FIREBASE_MESSAGING_SENDER_ID",
   "measurementId": ""
 }
