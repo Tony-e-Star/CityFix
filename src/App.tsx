@@ -6460,22 +6460,112 @@ export default function App() {
                 </div>
               )}
 
-              <div className="space-y-4 pt-4">
-                {/* Google Sign-In Button Only */}
-                <button
-                  type="button"
-                  disabled={authLoading}
-                  onClick={handleGoogleSignIn}
-                  className="w-full bg-white hover:bg-slate-50 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-850 dark:text-white border border-slate-300 dark:border-slate-800 font-display font-bold uppercase tracking-wider py-3 rounded-lg text-xs active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-sm font-mono disabled:opacity-50"
-                  id="google-signin-btn"
-                >
-                  {authLoading ? (
-                    <RefreshCw className="w-4 h-4 mr-2.5 animate-spin text-slate-500" />
-                  ) : (
-                    <GoogleIcon />
+              <div className="space-y-4 pt-1">
+                {/* Tabs to switch between Login and Signup */}
+                <div className="flex border-b border-slate-200 dark:border-slate-800 text-xs">
+                  <button
+                    onClick={() => {
+                      setAuthMode("login");
+                      setAuthError("");
+                    }}
+                    className={`flex-1 pb-2 font-bold uppercase tracking-wider text-center ${
+                      authMode === "login"
+                        ? "text-slate-900 dark:text-white border-b-2 border-[#ff453a]"
+                        : "text-slate-400 dark:text-slate-600 hover:text-slate-500 hover:border-b hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer"
+                    }`}
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => {
+                      setAuthMode("signup");
+                      setAuthError("");
+                    }}
+                    className={`flex-1 pb-2 font-bold uppercase tracking-wider text-center ${
+                      authMode === "signup"
+                        ? "text-slate-900 dark:text-white border-b-2 border-[#ff453a]"
+                        : "text-slate-400 dark:text-slate-600 hover:text-slate-500 hover:border-b hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer"
+                    }`}
+                  >
+                    Register
+                  </button>
+                </div>
+
+                <form onSubmit={authMode === "login" ? handleLogin : handleRegister} className="space-y-3">
+                  {authMode === "signup" && (
+                    <div className="space-y-1 text-left">
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">Full Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. John Doe"
+                        className="w-full bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-slate-800 p-2 rounded-lg text-xs outline-none text-slate-800 dark:text-white focus:border-slate-400 dark:focus:border-slate-600 transition-all"
+                        value={authName}
+                        onChange={(e) => setAuthName(e.target.value)}
+                        required
+                      />
+                    </div>
                   )}
-                  Continue with Google
-                </button>
+
+                  <div className="space-y-1 text-left">
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">Email Address</label>
+                    <input
+                      type="email"
+                      placeholder="e.g. your@email.com"
+                      className="w-full bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-slate-800 p-2 rounded-lg text-xs outline-none text-slate-800 dark:text-white focus:border-slate-400 dark:focus:border-slate-600 transition-all"
+                      value={authEmail}
+                      onChange={(e) => setAuthEmail(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1 text-left">
+                    <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">Password</label>
+                    <input
+                      type="password"
+                      placeholder="••••••••"
+                      className="w-full bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-slate-800 p-2 rounded-lg text-xs outline-none text-slate-800 dark:text-white focus:border-slate-400 dark:focus:border-slate-600 transition-all"
+                      value={authPassword}
+                      onChange={(e) => setAuthPassword(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={authLoading}
+                    className="w-full bg-[#ff453a] hover:bg-[#ff453a]/90 text-white font-bold py-2.5 rounded-lg text-xs uppercase tracking-wider active:scale-95 transition-all shadow-sm cursor-pointer font-mono disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {authLoading ? (
+                      <RefreshCw className="w-4 h-4 animate-spin" />
+                    ) : (
+                      authMode === "login" ? "Sign In" : "Create Account"
+                    )}
+                  </button>
+                </form>
+
+                <div className="relative flex py-1 items-center">
+                  <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                  <span className="flex-shrink mx-4 text-slate-400 text-[9px] uppercase font-mono tracking-wider">or</span>
+                  <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
+                </div>
+
+                <div className="space-y-3">
+                  {/* Google Sign-In Button */}
+                  <button
+                    type="button"
+                    disabled={authLoading}
+                    onClick={handleGoogleSignIn}
+                    className="w-full bg-white hover:bg-slate-50 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-850 dark:text-white border border-slate-300 dark:border-slate-800 font-display font-bold uppercase tracking-wider py-3 rounded-lg text-xs active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-sm font-mono disabled:opacity-50"
+                    id="google-signin-btn"
+                  >
+                    {authLoading ? (
+                      <RefreshCw className="w-4 h-4 mr-2.5 animate-spin text-slate-500" />
+                    ) : (
+                      <GoogleIcon />
+                    )}
+                    Continue with Google
+                  </button>
+                </div>
               </div>
             </motion.div>
           </div>
