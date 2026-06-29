@@ -1,7 +1,7 @@
 {
   "projectId": "gen-lang-client-0729642948",
   "appId": "1:686963895890:web:a60c0898e43e08fec6b98b",
-  "apiKey": "AIzaSyDAXe_Ij4xyERJXSe93lfiBGhVmCv4YhGA",
+  "apiKey": "PLACEHOLDER_REPLACED_BY_VITE_FIREBASE_API_KEY",
   "authDomain": "gen-lang-client-0729642948.firebaseapp.com",
   "firestoreDatabaseId": "ai-studio-cityfix-17af1bde-78fb-4278-aa07-716fd5755227",
   "storageBucket": "gen-lang-client-0729642948.firebasestorage.app",
