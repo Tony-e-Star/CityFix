@@ -61,7 +61,7 @@ import SmsDispatchBot from "./components/SmsDispatchBot";
 import { AdminDashboardView } from "./components/AdminDashboardView";
 import { getInitials } from "./utils";
 import { auth, googleProvider } from "./firebase";
-import { signInWithPopup } from "firebase/auth";
+import { signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 const GoogleIcon: React.FC = () => (
   <svg className="w-4 h-4 mr-2.5 shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -3349,11 +3349,27 @@ export default function App() {
     }
     setAuthLoading(true);
     try {
-      const res = await fetch("/api/auth/register", {
+      // 1. Register with real Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
+      const user = userCredential.user;
+
+      // 2. Set the displayName in Firebase Auth
+      const displayName = authName || authEmail.split("@")[0].split(/[._-]/).map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+      await updateProfile(user, { displayName });
+
+      // 3. Sync profile to server backend
+      const photoURL = `https://api.dicebear.com/7.x/bottts/svg?seed=${displayName}`;
+      const res = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: authEmail, password: authPassword, name: authName }),
+        body: JSON.stringify({ 
+          email: authEmail, 
+          name: displayName, 
+          photoURL,
+          loginMethod: "Password"
+        }),
       });
+
       const data = await res.json();
       if (res.ok && data.success) {
         setCurrentUser(data.user);
@@ -3366,16 +3382,19 @@ export default function App() {
         setAuthName("");
         fetchDbUsers();
       } else {
-        setAuthError(data.error || "Signup failed.");
+        setAuthError(data.error || "Failed to synchronize profile with backend.");
       }
-    } catch (err) {
-      setAuthError("Registering offline profile (demo mode).");
-      const mockUser = { id: `USR-${Date.now()}`, email: authEmail, name: authName || authEmail.split("@")[0] };
-      setCurrentUser(mockUser);
-      setAuthToken(`mock_token_${mockUser.id}`);
-      localStorage.setItem("civic-user", JSON.stringify(mockUser));
-      localStorage.setItem("civic-token", `mock_token_${mockUser.id}`);
-      setAuthModalOpen(false);
+    } catch (err: any) {
+      console.error("Firebase Registration Error:", err);
+      if (err?.code === "auth/email-already-in-use") {
+        setAuthError("This email address is already in use.");
+      } else if (err?.code === "auth/invalid-email") {
+        setAuthError("Invalid email address format.");
+      } else if (err?.code === "auth/weak-password") {
+        setAuthError("Password is too weak.");
+      } else {
+        setAuthError(err.message || "Signup failed.");
+      }
     } finally {
       setAuthLoading(false);
     }
@@ -3390,11 +3409,25 @@ export default function App() {
     }
     setAuthLoading(true);
     try {
-      const res = await fetch("/api/auth/login", {
+      // 1. Sign in with real Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, authEmail, authPassword);
+      const user = userCredential.user;
+
+      // 2. Sync profile and fetch backend token
+      const name = user.displayName || authEmail.split("@")[0].split(/[._-]/).map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+      const photoURL = user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
+
+      const res = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: authEmail, password: authPassword }),
+        body: JSON.stringify({ 
+          email: authEmail, 
+          name, 
+          photoURL,
+          loginMethod: "Password"
+        }),
       });
+
       const data = await res.json();
       if (res.ok && data.success) {
         setCurrentUser(data.user);
@@ -3406,19 +3439,18 @@ export default function App() {
         setAuthPassword("");
         fetchDbUsers();
       } else {
-        setAuthError(data.error || "Invalid user credentials.");
+        setAuthError(data.error || "Failed to synchronize session with backend.");
       }
-    } catch (err) {
-      // offline login fallback for test user
-      if (authEmail === "test@example.com" && authPassword === "password123") {
-        const mockUser = { id: "USR-11111111111", email: authEmail, name: "Test Officer" };
-        setCurrentUser(mockUser);
-        setAuthToken(`mock_token_${mockUser.id}`);
-        localStorage.setItem("civic-user", JSON.stringify(mockUser));
-        localStorage.setItem("civic-token", `mock_token_${mockUser.id}`);
-        setAuthModalOpen(false);
+    } catch (err: any) {
+      console.error("Firebase Login Error:", err);
+      if (err?.code === "auth/wrong-password" || err?.code === "auth/user-not-found" || err?.code === "auth/invalid-credential") {
+        setAuthError("Invalid email or password.");
+      } else if (err?.code === "auth/invalid-email") {
+        setAuthError("Invalid email address format.");
+      } else if (err?.code === "auth/user-disabled") {
+        setAuthError("This user account has been disabled.");
       } else {
-        setAuthError("Incorrect password. Use password123 as test password.");
+        setAuthError(err.message || "Login failed. Please verify your credentials.");
       }
     } finally {
       setAuthLoading(false);

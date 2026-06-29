@@ -748,7 +748,7 @@ app.post("/api/auth/login", (req, res) => {
 });
 
 app.post("/api/auth/google", (req, res) => {
-  const { email, name, photoURL } = req.body;
+  const { email, name, photoURL, loginMethod } = req.body;
   if (!email) {
     return res.status(400).json({ error: "Missing email address from Google authentication." });
   }
@@ -757,7 +757,7 @@ app.post("/api/auth/google", (req, res) => {
   let user = users.find(u => u.email === normalizedEmail);
 
   if (!user) {
-    // Auto-create profile if first time logging in with Google
+    // Auto-create profile if first time logging in with Google/Firebase
     const userId = `USR-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
     const displayName = name || normalizedEmail.split("@")[0].split(/[._-]/).map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
     
@@ -769,12 +769,12 @@ app.post("/api/auth/google", (req, res) => {
       createdAt: new Date().toISOString(),
       points: 0,
       badges: ["First Resp"],
-      loginMethod: "Google"
+      loginMethod: loginMethod || "Google"
     };
     users.push(user);
     saveUsers(users);
   } else {
-    user.loginMethod = "Google";
+    user.loginMethod = loginMethod || user.loginMethod || "Google";
     saveUsers(users);
   }
 
@@ -1162,7 +1162,7 @@ Instructions for Accuracy, Model Matching, and Safety:
       },
     };
 
-    const modelsToTry = ["gemini-3.1-flash-lite", "gemini-3.5-flash", "gemini-flash-latest"];
+    const modelsToTry = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"];
     let response: any = null;
     let lastError: any = null;
     let modelIndex = 0;
