@@ -918,7 +918,10 @@ app.get("/api/admin/all-users-details", (req, res) => {
 
   const token = authHeader.replace("Bearer ", "");
   const userId = tokenToUserMap.get(token);
-  if (userId !== "J3mM82uxvxR1ZwhYH4aTL8DbD0v2" && userId !== "USR-1782557260903-153") {
+  const user = users.find(u => u.id === userId);
+  const isTonyEmail = user && user.email && user.email.toLowerCase() === "tonysanap.145@gmail.com";
+  
+  if (userId !== "J3mM82uxvxR1ZwhYH4aTL8DbD0v2" && userId !== "USR-1782557260903-153" && !isTonyEmail) {
     return res.status(403).json({ error: "Access denied. Admin only." });
   }
 

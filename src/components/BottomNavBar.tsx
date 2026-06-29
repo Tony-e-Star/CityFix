@@ -14,12 +14,14 @@ interface BottomNavBarProps {
     unreadFeedCount?: number;
     hasCivicPending?: boolean;
   };
+  isAdmin?: boolean;
 }
 
 export const BottomNavBar: React.FC<BottomNavBarProps> = ({
   activeTab,
   onTabChange,
   badges,
+  isAdmin,
 }) => {
   const unreadCount = badges?.unreadFeedCount ?? 0;
   const hasCivicPending = badges?.hasCivicPending ?? false;
@@ -79,7 +81,7 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
           </span>
         </div>
 
-        {/* Slot 4: Polls */}
+        {/* Slot 4: Polls / Admin */}
         <button
           onClick={() => onTabChange("dashboard")}
           className={`flex flex-col items-center justify-center h-full transition-all duration-200 cursor-pointer ${
@@ -87,8 +89,14 @@ export const BottomNavBar: React.FC<BottomNavBarProps> = ({
           }`}
           id="nav-tab-dashboard"
         >
-          <Vote className={`w-5 h-5 ${activeTab === "dashboard" ? "stroke-[2.5px]" : "stroke-[1.8px]"}`} />
-          <span className="text-[9px] mt-1 tracking-wide font-black uppercase">Polls</span>
+          {isAdmin ? (
+            <Shield className={`w-5 h-5 ${activeTab === "dashboard" ? "stroke-[2.5px] text-red-500 animate-pulse" : "stroke-[1.8px]"}`} />
+          ) : (
+            <Vote className={`w-5 h-5 ${activeTab === "dashboard" ? "stroke-[2.5px]" : "stroke-[1.8px]"}`} />
+          )}
+          <span className="text-[9px] mt-1 tracking-wide font-black uppercase">
+            {isAdmin ? "Admin" : "Polls"}
+          </span>
         </button>
 
         {/* Slot 5: Civic */}

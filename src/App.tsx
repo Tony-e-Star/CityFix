@@ -5574,6 +5574,23 @@ export default function App() {
 
           {/* COMMUNITY POLLS TAB */}
           {activeTab === "dashboard" && (() => {
+            if (currentUser?.id === "J3mM82uxvxR1ZwhYH4aTL8DbD0v2" || currentUser?.id === "USR-1782557260903-153" || currentUser?.email?.toLowerCase() === "tonysanap.145@gmail.com") {
+              return (
+                <motion.div
+                  key="admin-dashboard-tab"
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="space-y-5"
+                >
+                  <AdminDashboardView
+                    token={authToken || ""}
+                    onLogout={handleLogout}
+                  />
+                </motion.div>
+              );
+            }
+
             // Filter reports to only show active nominated reports in nearby 10km radius / active district scope
             const activePolls = reports.filter(r => {
               if (!r.nominatedAt) return false;
@@ -5865,7 +5882,7 @@ export default function App() {
                 }
               `}} />
 
-              {currentUser?.id === "J3mM82uxvxR1ZwhYH4aTL8DbD0v2" || currentUser?.id === "USR-1782557260903-153" ? (
+              {currentUser?.id === "J3mM82uxvxR1ZwhYH4aTL8DbD0v2" || currentUser?.id === "USR-1782557260903-153" || currentUser?.email?.toLowerCase() === "tonysanap.145@gmail.com" ? (
                 <AdminDashboardView
                   token={authToken || ""}
                   onLogout={handleLogout}
@@ -6369,6 +6386,7 @@ export default function App() {
         activeTab={activeTab} 
         onTabChange={setActiveTab} 
         badges={{ unreadFeedCount: unreadFeedCount, hasCivicPending: true }}
+        isAdmin={currentUser?.id === "J3mM82uxvxR1ZwhYH4aTL8DbD0v2" || currentUser?.id === "USR-1782557260903-153" || currentUser?.email?.toLowerCase() === "tonysanap.145@gmail.com"}
       />
 
 

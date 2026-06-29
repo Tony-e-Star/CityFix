@@ -51,10 +51,10 @@ export const SideBar: React.FC<SideBarProps> = ({
 }) => {
   // Get the most recent reports for the user
   const recentReports = React.useMemo(() => {
-    // If user is logged in, filter by their userId. Otherwise show guest reports or last 5 reports
-    const filtered = currentUser 
-      ? reports.filter(r => r.userId === currentUser.id)
-      : reports.filter(r => !r.userId || r.userId === "USR-guest");
+    if (!currentUser) return [];
+    
+    // Filter strictly by the authenticated user's ID
+    const filtered = reports.filter(r => r.userId === currentUser.id);
     
     // Sort by newest and limit to 5
     return [...filtered]
@@ -210,9 +210,13 @@ export const SideBar: React.FC<SideBarProps> = ({
                   Recent Activity
                 </label>
 
-                {recentReports.length === 0 ? (
+                {!currentUser ? (
                   <div className="px-3.5 py-2 rounded-sm bg-zinc-950/20 border border-dashed border-zinc-900 text-center">
-                    <p className="text-[10px] text-text-muted italic">No recent reports logged</p>
+                    <p className="text-[10px] text-text-muted italic">Sign in to see your recent activity</p>
+                  </div>
+                ) : recentReports.length === 0 ? (
+                  <div className="px-3.5 py-2 rounded-sm bg-zinc-950/20 border border-dashed border-zinc-900 text-center">
+                    <p className="text-[10px] text-text-muted italic">No recent reports yet</p>
                   </div>
                 ) : (
                   <div className="space-y-1" id="recent-activity-list">

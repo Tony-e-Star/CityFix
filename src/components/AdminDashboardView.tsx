@@ -850,7 +850,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ token, o
                         <div className="truncate space-y-0.5">
                           <div className="flex items-center gap-1.5">
                             <h3 className="text-xs font-bold text-white truncate leading-tight">{user.name}</h3>
-                            {(user.id === "J3mM82uxvxR1ZwhYH4aTL8DbD0v2" || user.id === "USR-1782557260903-153") && (
+                            {(user.id === "J3mM82uxvxR1ZwhYH4aTL8DbD0v2" || user.id === "USR-1782557260903-153" || user.email?.toLowerCase() === "tonysanap.145@gmail.com") && (
                               <span className="bg-red-950/40 border border-red-800/60 text-red-400 text-[8px] font-bold px-1 rounded uppercase tracking-wider shrink-0">
                                 Admin
                               </span>

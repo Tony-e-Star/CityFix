@@ -2,22 +2,17 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Global Safety Net default deny
-    match /{document=**} {
-      allow read, write: if false;
-    }
-
     // Check if the user is authenticated
     function isSignedIn() {
       return request.auth != null;
     }
     
-    // Check if the user is the admin (includes J3mM82uxvxR1ZwhYH4aTL8DbD0v2, Tony Sanap's UID, and verified email)
+    // Check if the user is the admin (includes J3mM82uxvxR1ZwhYH4aTL8DbD0v2, USR-1782557260903-153, and email tonysanap.145@gmail.com)
     function isAdmin() {
       return isSignedIn() && (
         request.auth.uid == 'J3mM82uxvxR1ZwhYH4aTL8DbD0v2' ||
         request.auth.uid == 'USR-1782557260903-153' ||
-        (request.auth.token.email == 'tonysanap.145@gmail.com' && request.auth.token.email_verified == true)
+        request.auth.token.email == 'tonysanap.145@gmail.com'
       );
     }
     
@@ -26,9 +21,13 @@ service cloud.firestore {
       return isSignedIn() && request.auth.uid == userId;
     }
 
+    // Global rule for Admin read/write on any collection/document (including any hypothetical "files" or other collections)
+    match /{document=**} {
+      allow read, write: if isAdmin();
+    }
+
     // Rules for Users
     match /users/{userId} {
-      allow read, write: if isAdmin();
       allow read: if isOwner(userId);
       allow create, update: if isOwner(userId);
       allow delete: if false; // do not allow deleting user profiles
@@ -36,7 +35,6 @@ service cloud.firestore {
 
     // Rules for Reports
     match /reports/{reportId} {
-      allow read, write: if isAdmin();
       allow read: if true; // public reporting feed
       allow create: if isSignedIn();
       allow update: if isSignedIn(); // allow vouching, commenting, voting
@@ -45,7 +43,6 @@ service cloud.firestore {
 
     // Rules for Polls
     match /polls/{pollId} {
-      allow read, write: if isAdmin();
       allow read: if true; // public polling dashboard
       allow create, update: if isSignedIn();
       allow delete: if false;
