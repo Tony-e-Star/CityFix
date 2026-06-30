@@ -136,11 +136,23 @@ if (fs.existsSync(configPath)) {
     let credential;
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
       try {
-        const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        let rawCreds = process.env.FIREBASE_SERVICE_ACCOUNT.trim();
+        // If the credentials are wrapped in outer quotes (common in some env var managers), strip them
+        if (rawCreds.startsWith('"') && rawCreds.endsWith('"')) {
+          rawCreds = rawCreds.slice(1, -1);
+        }
+        // Normalize any escaped newlines to actual newlines
+        rawCreds = rawCreds.replace(/\\n/g, "\n");
+        
+        const serviceAccount = JSON.parse(rawCreds);
         credential = admin.cert(serviceAccount);
-        console.log("[Firebase] Using service account credentials from FIREBASE_SERVICE_ACCOUNT env var.");
-      } catch (err) {
-        console.error("[Firebase] Error parsing FIREBASE_SERVICE_ACCOUNT env var:", err);
+        console.log("[Firebase] Successfully parsed and loaded service account credentials from FIREBASE_SERVICE_ACCOUNT.");
+      } catch (err: any) {
+        console.error("=================================================================");
+        console.error("[Firebase] CRITICAL ERROR parsing FIREBASE_SERVICE_ACCOUNT env var:");
+        console.error(err.message || err);
+        console.error("Make sure your Netlify environment variable is a valid JSON string.");
+        console.error("=================================================================");
       }
     }
 
@@ -1968,6 +1980,9 @@ app.post("/api/reports/:id/poll-vote", (req, res) => {
 // -------------------------------------------------------------
 // Vite Assembly
 // -------------------------------------------------------------
+// Export the app for serverless/Netlify integration
+export { app };
+
 async function startServer() {
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
@@ -1995,4 +2010,7 @@ async function startServer() {
   });
 }
 
-startServer();
+// Only start the HTTP server if we're not running in a Netlify/serverless function environment
+if (!process.env.NETLIFY && !process.env.LAMBDA_TASK_ROOT && !process.env.FUNCTIONS_SIGNATURE) {
+  startServer();
+}
