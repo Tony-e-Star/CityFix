@@ -53,6 +53,7 @@ import {
   Navigation
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
+import { getApiUrl } from "./utils/api";
 import BottomNavBar from "./components/BottomNavBar";
 import SideBar from "./components/SideBar";
 import UserProfileView from "./components/UserProfileView";
@@ -561,7 +562,7 @@ export default function App() {
   // Sync / Get current registered users
   const fetchDbUsers = async () => {
     try {
-      const res = await fetch("/api/users");
+      const res = await fetch(getApiUrl("/api/users"));
       if (res.ok) {
         const data = await res.json();
         setDbUsers(data);
@@ -574,7 +575,7 @@ export default function App() {
   const fetchCurrentUserProfile = async () => {
     if (!authToken) return;
     try {
-      const res = await fetch("/api/auth/me", {
+      const res = await fetch(getApiUrl("/api/auth/me"), {
         headers: {
           "Authorization": `Bearer ${authToken}`
         }
@@ -1060,7 +1061,7 @@ export default function App() {
     if (!cachedToken) return;
 
     try {
-      const res = await fetch("/api/auth/me", {
+      const res = await fetch(getApiUrl("/api/auth/me"), {
         headers: { "Authorization": `Bearer ${cachedToken}` }
       });
       if (res.ok) {
@@ -1077,7 +1078,7 @@ export default function App() {
 
   const fetchHealth = async () => {
     try {
-      const res = await fetch("/api/health");
+      const res = await fetch(getApiUrl("/api/health"));
       if (res.ok) {
         const data = await res.json();
         setServerKeyStatus(data.apiKeyConfigured);
@@ -1093,7 +1094,7 @@ export default function App() {
 
   const fetchReports = async () => {
     try {
-      const res = await fetch("/api/reports", {
+      const res = await fetch(getApiUrl("/api/reports"), {
         headers: authToken ? { "Authorization": `Bearer ${authToken}` } : {}
       });
       if (res.ok) {
@@ -1452,7 +1453,7 @@ export default function App() {
     }
 
     try {
-      const res = await fetch("/api/users/me", {
+      const res = await fetch(getApiUrl("/api/users/me"), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -2376,7 +2377,7 @@ export default function App() {
     }
 
     try {
-      const res = await fetch("/api/verify-image", {
+      const res = await fetch(getApiUrl("/api/verify-image"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -2554,7 +2555,7 @@ export default function App() {
     }
 
     try {
-      const res = await fetch("/api/reports", {
+      const res = await fetch(getApiUrl("/api/reports"), {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -2661,7 +2662,7 @@ export default function App() {
     
     for (const item of itemsToSync) {
       try {
-        const res = await fetch("/api/reports", {
+        const res = await fetch(getApiUrl("/api/reports"), {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -2722,7 +2723,7 @@ export default function App() {
     const authorName = currentUser ? currentUser.email.split("@")[0] : "Civic Guardian";
 
     try {
-      const res = await fetch(`/api/reports/${reportId}/comments`, {
+      const res = await fetch(getApiUrl(`/api/reports/${reportId}/comments`), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ author: authorName, text })
@@ -2823,7 +2824,7 @@ export default function App() {
         ? `/api/reports/${reportId}/unvouch`
         : `/api/reports/${reportId}/vouch`;
 
-      const res = await fetch(endpoint, {
+      const res = await fetch(getApiUrl(endpoint), {
         method: "POST",
         headers
       });
@@ -2939,7 +2940,7 @@ export default function App() {
         headers["Authorization"] = `Bearer ${authToken}`;
       }
 
-      const res = await fetch(`/api/reports/${reportId}/nominate`, {
+      const res = await fetch(getApiUrl(`/api/reports/${reportId}/nominate`), {
         method: "POST",
         headers
       });
@@ -2986,7 +2987,7 @@ export default function App() {
         headers["Authorization"] = `Bearer ${authToken}`;
       }
 
-      const res = await fetch(`/api/reports/${reportId}/poll-vote`, {
+      const res = await fetch(getApiUrl(`/api/reports/${reportId}/poll-vote`), {
         method: "POST",
         headers
       });
@@ -3053,7 +3054,7 @@ export default function App() {
         ? `/api/reports/${reportId}/unflag`
         : `/api/reports/${reportId}/flag`;
 
-      const res = await fetch(endpoint, { 
+      const res = await fetch(getApiUrl(endpoint), { 
         method: "POST",
         headers
       });
@@ -3112,7 +3113,7 @@ export default function App() {
   // 5. Escalate Past SLA Timeout
   const handleEscalateReport = async (reportId: string) => {
     try {
-      const res = await fetch(`/api/reports/${reportId}/escalate`, { method: "POST" });
+      const res = await fetch(getApiUrl(`/api/reports/${reportId}/escalate`), { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setReports(prev => prev.map(r => r.id === reportId ? { ...r, isEscalated: true, timeline: data.report.timeline } : r));
@@ -3144,7 +3145,7 @@ export default function App() {
     setResolvingLoading(true);
 
     try {
-      const res = await fetch(`/api/reports/${resolvingId}/resolve`, {
+      const res = await fetch(getApiUrl(`/api/reports/${resolvingId}/resolve`), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -3189,7 +3190,7 @@ export default function App() {
   // 7. Citizen Loop Confirm Resolution closure
   const handleCitizenConfirm = async (reportId: string) => {
     try {
-      const res = await fetch(`/api/reports/${reportId}/citizen-confirm`, { method: "POST" });
+      const res = await fetch(getApiUrl(`/api/reports/${reportId}/citizen-confirm`), { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         setReports(prev => prev.map(r => r.id === reportId ? { 
@@ -3258,7 +3259,7 @@ export default function App() {
     };
 
     try {
-      const res = await fetch("/api/reports", {
+      const res = await fetch(getApiUrl("/api/reports"), {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -3317,7 +3318,7 @@ export default function App() {
 
       // 3. Sync profile to server backend
       const photoURL = `https://api.dicebear.com/7.x/bottts/svg?seed=${displayName}`;
-      const res = await fetch("/api/auth/google", {
+      const res = await fetch(getApiUrl("/api/auth/google"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -3383,7 +3384,7 @@ export default function App() {
       const name = user.displayName || authEmail.split("@")[0].split(/[._-]/).map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
       const photoURL = user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
 
-      const res = await fetch("/api/auth/google", {
+      const res = await fetch(getApiUrl("/api/auth/google"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
@@ -3444,7 +3445,7 @@ export default function App() {
       const name = user.displayName || email.split("@")[0];
       const photoURL = user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
 
-      const res = await fetch("/api/auth/google", {
+      const res = await fetch(getApiUrl("/api/auth/google"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, name, photoURL }),
@@ -3511,7 +3512,7 @@ export default function App() {
 
     setProfileUpdating(true);
     try {
-      const res = await fetch("/api/users/me", {
+      const res = await fetch(getApiUrl("/api/users/me"), {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -3547,7 +3548,7 @@ export default function App() {
   // --- ADMIN MOUNT MODERATION ---
   const handleApproveReport = async (reportId: string) => {
     try {
-      const res = await fetch(`/api/reports/${reportId}/status`, {
+      const res = await fetch(getApiUrl(`/api/reports/${reportId}/status`), {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",
@@ -3597,7 +3598,7 @@ export default function App() {
 
   const handleMergeDuplicate = async (reportId: string, originalId: string) => {
     try {
-      const res = await fetch(`/api/reports/${reportId}/merge`, {
+      const res = await fetch(getApiUrl(`/api/reports/${reportId}/merge`), {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -3658,7 +3659,7 @@ export default function App() {
 
   const handleUnlinkDuplicate = async (reportId: string) => {
     try {
-      const res = await fetch(`/api/reports/${reportId}/unlink`, {
+      const res = await fetch(getApiUrl(`/api/reports/${reportId}/unlink`), {
         method: "POST",
         headers: { 
           "Content-Type": "application/json",
@@ -3722,7 +3723,7 @@ export default function App() {
 
     // Inform server of status shift
     try {
-      const res = await fetch(`/api/reports/${reportId}/status`, {
+      const res = await fetch(getApiUrl(`/api/reports/${reportId}/status`), {
         method: "PATCH",
         headers: { 
           "Content-Type": "application/json",

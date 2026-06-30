@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getApiUrl } from "../utils/api";
 import { 
   Shield, 
   User as UserIcon, 
@@ -133,7 +134,7 @@ export const AdminDashboardView: React.FC<AdminDashboardViewProps> = ({ token, o
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch("/api/admin/all-users-details", {
+      const response = await fetch(getApiUrl("/api/admin/all-users-details"), {
         headers: {
           "Authorization": `Bearer ${token}`
         }
