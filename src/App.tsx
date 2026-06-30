@@ -573,7 +573,7 @@ export default function App() {
   };
 
   const fetchCurrentUserProfile = async () => {
-    if (!authToken) return;
+    if (!authToken || authToken === "DEMO-MODE-TOKEN") return;
     try {
       const res = await fetch(getApiUrl("/api/auth/me"), {
         headers: {
@@ -2508,36 +2508,47 @@ export default function App() {
       classificationMethod: finalClassificationMethod,
     };
 
-    // --- OFFLINE ELEMENT INTEGRATION ---
-    if (isOfflineMode) {
-      const offlineId = `OFF-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
-      const offlineItem = {
+    // --- OFFLINE / DEMO ELEMENT INTEGRATION ---
+    const isDemoMode = currentUser?.id === "USR-DEMO-MOCK";
+    if (isOfflineMode || isDemoMode) {
+      const simulatedId = isDemoMode ? `REP-${Date.now()}` : `OFF-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+      const simulatedItem = {
         ...payload,
-        id: offlineId,
-        status: "Submitted",
+        id: simulatedId,
+        status: isDemoMode ? "Pending Approval" : "Submitted",
         createdAt: new Date().toISOString(),
         vouchCount: 1,
         timeline: [
-          { stage: "Submitted", time: new Date().toISOString(), note: "Draft compiled offline. Added to the local outbox sync queue." }
+          { 
+            stage: isDemoMode ? "Pending Approval" : "Submitted", 
+            time: new Date().toISOString(), 
+            note: isDemoMode 
+              ? "Report filed successfully (Demo Sandbox simulation)." 
+              : "Draft compiled offline. Added to the local outbox sync queue." 
+          }
         ],
         comments: [],
         severity: "Medium",
-        landmarks: "Recorded while offline in the field",
+        landmarks: isDemoMode ? "Recorded in Demo Sandbox" : "Recorded while offline in the field",
         assignedDepartment: "Department of Public Works",
         slaDurationDays: 5,
         slaDueDate: new Date(Date.now() + 5 * 24 * 3600 * 1000).toISOString()
       };
 
-      setOfflineQueue(prev => [...prev, offlineItem]);
-      setReports(prev => [offlineItem as any, ...prev]);
-      setSubmittedId(offlineId);
+      if (isOfflineMode && !isDemoMode) {
+        setOfflineQueue(prev => [...prev, simulatedItem]);
+      }
+      setReports(prev => [simulatedItem as any, ...prev]);
+      setSubmittedId(simulatedId);
       setIsSubmitSuccessAnimating(true);
 
       setNotifications(prev => [
         {
           id: `noti-${Date.now()}`,
-          title: "Offline Ticket Enqueued 📥",
-          message: "No internet connection detected. Your ticket has been preserved in the outbox.",
+          title: isDemoMode ? "Report Filed (Demo) 🚀" : "Offline Ticket Enqueued 📥",
+          message: isDemoMode 
+            ? "Your ticket has been dispatched successfully in the Demo Sandbox environment."
+            : "No internet connection detected. Your ticket has been preserved in the outbox.",
           time: "Just now",
           read: false
         },
@@ -2720,6 +2731,28 @@ export default function App() {
       return;
     }
     
+    const isDemoMode = currentUser?.id === "USR-DEMO-MOCK";
+    if (isDemoMode) {
+      const mockCmt = {
+        id: `cmt-${Date.now()}`,
+        userId: currentUser.id,
+        userName: currentUser.name || "Demo Guest",
+        userPhoto: (currentUser as any).photoURL || "",
+        text,
+        createdAt: new Date().toISOString()
+      };
+      setReports(prev => prev.map(r => {
+        if (r.id === reportId) {
+          const currentComments = r.comments || [];
+          return { ...r, comments: [...currentComments, mockCmt] };
+        }
+        return r;
+      }));
+      setCommentsInput(prev => ({ ...prev, [reportId]: "" }));
+      showAlert("Comment posted successfully (Demo Sandbox)! 💬");
+      return;
+    }
+
     const authorName = currentUser ? currentUser.email.split("@")[0] : "Civic Guardian";
 
     try {
@@ -2813,6 +2846,38 @@ export default function App() {
 
   const executeVouchReport = async (reportId: string, isRemoval: boolean) => {
     if (!currentUser) return;
+
+    const isDemoMode = currentUser?.id === "USR-DEMO-MOCK";
+    if (isDemoMode) {
+      setReports(prev => prev.map(r => {
+        if (r.id === reportId) {
+          const currentVouches = isRemoval 
+            ? Math.max(0, (r.vouchCount || 0) - 1)
+            : (r.vouchCount || 0) + 1;
+          const newStatus = !isRemoval && currentVouches >= 3 && r.status === "Submitted" ? "Verified" : r.status;
+          const timeline = r.timeline || [];
+          return {
+            ...r,
+            vouchCount: currentVouches,
+            vouchedUserIds: isRemoval 
+              ? (r.vouchedUserIds || []).filter(uid => uid !== currentUser.id)
+              : [...(r.vouchedUserIds || []), currentUser.id],
+            status: newStatus as any,
+            timeline: [
+              ...timeline,
+              { 
+                stage: isRemoval ? "Unvouched" : "Vouched", 
+                time: new Date().toISOString(), 
+                note: `${isRemoval ? "Vouch removal" : "Vouch"} acknowledged (Demo Sandbox simulation).` 
+              }
+            ]
+          };
+        }
+        return r;
+      }));
+      showAlert(isRemoval ? "Your vouch has been removed (Demo Sandbox)!" : "Vouch Confirmed (Demo Sandbox)! 👍");
+      return;
+    }
 
     try {
       const headers: Record<string, string> = {};
@@ -2934,6 +2999,24 @@ export default function App() {
       return;
     }
 
+    const isDemoMode = currentUser?.id === "USR-DEMO-MOCK";
+    if (isDemoMode) {
+      setReports(prev => prev.map(r => {
+        if (r.id === reportId) {
+          return {
+            ...r,
+            nominatedAt: new Date().toISOString(),
+            nominatedByUserId: currentUser.id,
+            pollVotes: 1,
+            pollVotedUserIds: [currentUser.id]
+          };
+        }
+        return r;
+      }));
+      showAlert("Issue nominated for Community Polls successfully (Demo Sandbox)! 👍");
+      return;
+    }
+
     try {
       const headers: Record<string, string> = {};
       if (authToken) {
@@ -2978,6 +3061,27 @@ export default function App() {
       setAuthMode("login");
       setAuthError("You must sign in to vote for a community priority.");
       setAuthModalOpen(true);
+      return;
+    }
+
+    const isDemoMode = currentUser?.id === "USR-DEMO-MOCK";
+    if (isDemoMode) {
+      setReports(prev => prev.map(r => {
+        if (r.id === reportId) {
+          const pollVotedUserIds = r.pollVotedUserIds || [];
+          if (pollVotedUserIds.includes(currentUser.id)) {
+            showAlert("You have already voted for this issue (Demo Sandbox).");
+            return r;
+          }
+          return {
+            ...r,
+            pollVotes: (r.pollVotes || 0) + 1,
+            pollVotedUserIds: [...pollVotedUserIds, currentUser.id]
+          };
+        }
+        return r;
+      }));
+      showAlert("Your priority vote has been cast successfully (Demo Sandbox)! 🗳️");
       return;
     }
 
@@ -3043,6 +3147,27 @@ export default function App() {
 
   const executeFlagReport = async (reportId: string, isRemoval: boolean) => {
     if (!currentUser) return;
+
+    const isDemoMode = currentUser?.id === "USR-DEMO-MOCK";
+    if (isDemoMode) {
+      setReports(prev => prev.map(r => r.id === reportId ? { 
+        ...r, 
+        flagCount: isRemoval ? Math.max(0, (r.flagCount || 0) - 1) : (r.flagCount || 0) + 1,
+        flaggedUserIds: isRemoval 
+          ? (r.flaggedUserIds || []).filter(uid => uid !== currentUser.id)
+          : [...(r.flaggedUserIds || []), currentUser.id],
+        timeline: [
+          ...(r.timeline || []),
+          {
+            stage: isRemoval ? "Unflagged" : "Flagged",
+            time: new Date().toISOString(),
+            note: `Report spam flag ${isRemoval ? "removed" : "applied"} (Demo Sandbox simulation).`
+          }
+        ]
+      } : r));
+      showAlert(isRemoval ? "Your spam flag has been removed (Demo Sandbox)." : "Report flagged as spam (Demo Sandbox).");
+      return;
+    }
 
     try {
       const headers: Record<string, string> = {};
@@ -3298,45 +3423,30 @@ export default function App() {
   const handleDemoSignIn = async () => {
     setAuthError("");
     setAuthLoading(true);
-    try {
-      const res = await fetch(getApiUrl("/api/auth/login"), {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: "demo@cityfix.app",
-          password: "demopassword123"
-        })
-      });
+    // Simulate short delay for a premium loading experience
+    await new Promise(resolve => setTimeout(resolve, 600));
+    
+    const mockUser = {
+      id: "USR-DEMO-MOCK",
+      email: "local-demo@cityfix.app",
+      name: "Demo Guest",
+      photoURL: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&h=150&q=80",
+      points: 120,
+      badges: ["Demo Explorer", "Civic Scout"],
+      savedLocation: "Metro Center"
+    };
 
-      const responseText = await res.text();
-      let data: any = {};
-      try {
-        data = responseText ? JSON.parse(responseText) : {};
-      } catch (parseErr) {
-        console.error("Failed to parse response as JSON:", responseText);
-        throw new Error(`Server returned status ${res.status}: ${responseText.slice(0, 150)}`);
-      }
-
-      if (res.ok && data.success) {
-        setCurrentUser(data.user);
-        setAuthToken(data.token);
-        localStorage.setItem("civic-user", JSON.stringify(data.user));
-        localStorage.setItem("civic-token", data.token);
-        setAuthModalOpen(false);
-        setAuthEmail("");
-        setAuthPassword("");
-        setAuthName("");
-        fetchDbUsers();
-        showAlert("Logged in as Demo Judge. Thank you for evaluating CityFix! 🌟");
-      } else {
-        setAuthError(data.error || "Failed to sign in as Demo user.");
-      }
-    } catch (err: any) {
-      console.error("Demo Sign-In Error:", err);
-      setAuthError(err.message || "Demo login failed. Please check your network connection and try again.");
-    } finally {
-      setAuthLoading(false);
-    }
+    setCurrentUser(mockUser);
+    setAuthToken("DEMO-MODE-TOKEN");
+    localStorage.setItem("civic-user", JSON.stringify(mockUser));
+    localStorage.setItem("civic-token", "DEMO-MODE-TOKEN");
+    
+    setAuthModalOpen(false);
+    setAuthEmail("");
+    setAuthPassword("");
+    setAuthName("");
+    setAuthLoading(false);
+    showAlert("Welcome to Demo Mode! Feel free to test any action in this sandbox environment. 🌟");
   };
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -3466,6 +3576,22 @@ export default function App() {
   const handleUpdateProfile = async () => {
     if (!profileName.trim()) {
       showAlert("Display Name cannot be empty.");
+      return;
+    }
+
+    const isDemoMode = currentUser?.id === "USR-DEMO-MOCK";
+    if (isDemoMode) {
+      setProfileUpdating(true);
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const updatedUser = {
+        ...currentUser,
+        name: profileName,
+        photoURL: profilePhoto
+      };
+      setCurrentUser(updatedUser);
+      localStorage.setItem("civic-user", JSON.stringify(updatedUser));
+      setProfileUpdating(false);
+      showAlert("Your citizen profile has been updated successfully (Demo Sandbox)!");
       return;
     }
 
