@@ -6,11 +6,12 @@
 export const getApiUrl = (path: string): string => {
   let envUrl = (import.meta as any).env.VITE_API_URL;
   
-  // If we are not on the same-origin Cloud Run URL (i.e. we are on netlify.app, localhost, etc.)
-  // and VITE_API_URL is not set, automatically fall back to the primary Cloud Run backend.
+  // On Netlify, we have a proxy redirect rule configured in netlify.toml for "/api/*".
+  // Therefore, we should use relative paths ("") to leverage this proxy, which avoids CORS issues completely.
   if (!envUrl && typeof window !== "undefined") {
     const isSameOrigin = window.location.hostname.endsWith(".run.app");
-    if (!isSameOrigin) {
+    const isNetlify = window.location.hostname.endsWith("netlify.app");
+    if (!isSameOrigin && !isNetlify) {
       envUrl = "https://ais-pre-d7mgkxp3mivfkjvlsqlbsc-1033877112442.asia-southeast1.run.app";
     }
   }
