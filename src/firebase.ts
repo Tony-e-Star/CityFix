@@ -13,6 +13,9 @@ const actualConfig = {
   messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || firebaseConfig.messagingSenderId,
 };
 
+// Check if Firebase is fully configured
+export const isFirebaseConfigured = !!(actualConfig.apiKey && actualConfig.projectId && !actualConfig.projectId.includes("PLACEHOLDER"));
+
 // Initialize Firebase App
 const app = initializeApp(actualConfig);
 

@@ -61,7 +61,7 @@ import SettingsModal from "./components/SettingsModal";
 import SmsDispatchBot from "./components/SmsDispatchBot";
 import { AdminDashboardView } from "./components/AdminDashboardView";
 import { getInitials } from "./utils";
-import { auth, googleProvider } from "./firebase";
+import { auth, googleProvider, isFirebaseConfigured } from "./firebase";
 import { signInWithPopup, createUserWithEmailAndPassword, signInWithEmailAndPassword, updateProfile } from "firebase/auth";
 
 const GoogleIcon: React.FC = () => (
@@ -3308,25 +3308,15 @@ export default function App() {
     }
     setAuthLoading(true);
     try {
-      // 1. Register with real Firebase Auth
-      const userCredential = await createUserWithEmailAndPassword(auth, authEmail, authPassword);
-      const user = userCredential.user;
-
-      // 2. Set the displayName in Firebase Auth
-      const displayName = authName || authEmail.split("@")[0].split(/[._-]/).map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
-      await updateProfile(user, { displayName });
-
-      // 3. Sync profile to server backend
-      const photoURL = `https://api.dicebear.com/7.x/bottts/svg?seed=${displayName}`;
-      const res = await fetch(getApiUrl("/api/auth/google"), {
+      // 1. Register with backend directly to ensure compatibility across Netlify & standard local setups
+      const res = await fetch(getApiUrl("/api/auth/register"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email: authEmail, 
-          name: displayName, 
-          photoURL,
-          loginMethod: "Password"
-        }),
+        body: JSON.stringify({
+          email: authEmail,
+          password: authPassword,
+          name: authName
+        })
       });
 
       const responseText = await res.text();
@@ -3349,19 +3339,11 @@ export default function App() {
         setAuthName("");
         fetchDbUsers();
       } else {
-        setAuthError(data.error || "Failed to synchronize profile with backend.");
+        setAuthError(data.error || "Failed to register user on the backend.");
       }
     } catch (err: any) {
-      console.error("Firebase Registration Error:", err);
-      if (err?.code === "auth/email-already-in-use") {
-        setAuthError("This email address is already in use.");
-      } else if (err?.code === "auth/invalid-email") {
-        setAuthError("Invalid email address format.");
-      } else if (err?.code === "auth/weak-password") {
-        setAuthError("Password is too weak.");
-      } else {
-        setAuthError(err.message || "Signup failed.");
-      }
+      console.error("Registration Error:", err);
+      setAuthError(err.message || "Signup failed. Please check your network connection and try again.");
     } finally {
       setAuthLoading(false);
     }
@@ -3376,23 +3358,14 @@ export default function App() {
     }
     setAuthLoading(true);
     try {
-      // 1. Sign in with real Firebase Auth
-      const userCredential = await signInWithEmailAndPassword(auth, authEmail, authPassword);
-      const user = userCredential.user;
-
-      // 2. Sync profile and fetch backend token
-      const name = user.displayName || authEmail.split("@")[0].split(/[._-]/).map((word: string) => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
-      const photoURL = user.photoURL || `https://api.dicebear.com/7.x/bottts/svg?seed=${name}`;
-
-      const res = await fetch(getApiUrl("/api/auth/google"), {
+      // Login with backend directly
+      const res = await fetch(getApiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          email: authEmail, 
-          name, 
-          photoURL,
-          loginMethod: "Password"
-        }),
+        body: JSON.stringify({
+          email: authEmail,
+          password: authPassword
+        })
       });
 
       const responseText = await res.text();
@@ -3414,19 +3387,11 @@ export default function App() {
         setAuthPassword("");
         fetchDbUsers();
       } else {
-        setAuthError(data.error || "Failed to synchronize session with backend.");
+        setAuthError(data.error || "Invalid email or password.");
       }
     } catch (err: any) {
-      console.error("Firebase Login Error:", err);
-      if (err?.code === "auth/wrong-password" || err?.code === "auth/user-not-found" || err?.code === "auth/invalid-credential") {
-        setAuthError("Invalid email or password.");
-      } else if (err?.code === "auth/invalid-email") {
-        setAuthError("Invalid email address format.");
-      } else if (err?.code === "auth/user-disabled") {
-        setAuthError("This user account has been disabled.");
-      } else {
-        setAuthError(err.message || "Login failed. Please verify your credentials.");
-      }
+      console.error("Login Error:", err);
+      setAuthError(err.message || "Login failed. Please check your network connection and try again.");
     } finally {
       setAuthLoading(false);
     }
@@ -3434,6 +3399,10 @@ export default function App() {
 
   const handleGoogleSignIn = async () => {
     setAuthError("");
+    if (!isFirebaseConfigured) {
+      setAuthError("Google Sign-In is not configured on this environment. Please use Email / Password register/login instead, which is fully functional!");
+      return;
+    }
     setAuthLoading(true);
     try {
       const result = await signInWithPopup(auth, googleProvider);
