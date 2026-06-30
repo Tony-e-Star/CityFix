@@ -3295,27 +3295,16 @@ export default function App() {
   };
 
   // --- AUTH RUNNERS ---
-  const handleRegister = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleDemoSignIn = async () => {
     setAuthError("");
-    if (!authEmail || !authPassword) {
-      setAuthError("Email and password are required.");
-      return;
-    }
-    if (authPassword.length < 6) {
-      setAuthError("Password must be at least 6 characters.");
-      return;
-    }
     setAuthLoading(true);
     try {
-      // 1. Register with backend directly to ensure compatibility across Netlify & standard local setups
-      const res = await fetch(getApiUrl("/api/auth/register"), {
+      const res = await fetch(getApiUrl("/api/auth/login"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: authEmail,
-          password: authPassword,
-          name: authName
+          email: "demo@cityfix.app",
+          password: "demopassword123"
         })
       });
 
@@ -3338,12 +3327,13 @@ export default function App() {
         setAuthPassword("");
         setAuthName("");
         fetchDbUsers();
+        showAlert("Logged in as Demo Judge. Thank you for evaluating CityFix! 🌟");
       } else {
-        setAuthError(data.error || "Failed to register user on the backend.");
+        setAuthError(data.error || "Failed to sign in as Demo user.");
       }
     } catch (err: any) {
-      console.error("Registration Error:", err);
-      setAuthError(err.message || "Signup failed. Please check your network connection and try again.");
+      console.error("Demo Sign-In Error:", err);
+      setAuthError(err.message || "Demo login failed. Please check your network connection and try again.");
     } finally {
       setAuthLoading(false);
     }
@@ -6429,7 +6419,7 @@ export default function App() {
                 </div>
                 
                 <h3 className="text-md font-display font-black uppercase tracking-wider mt-2">
-                  Sign In / Register
+                  Sign In
                 </h3>
                 
                 <p className="text-[10px] text-text-muted max-w-[240px] mx-auto leading-relaxed">
@@ -6444,87 +6434,21 @@ export default function App() {
               )}
 
               <div className="space-y-4 pt-1">
-                {/* Tabs to switch between Login and Signup */}
-                <div className="flex border-b border-slate-200 dark:border-slate-800 text-xs">
-                  <button
-                    onClick={() => {
-                      setAuthMode("login");
-                      setAuthError("");
-                    }}
-                    className={`flex-1 pb-2 font-bold uppercase tracking-wider text-center ${
-                      authMode === "login"
-                        ? "text-slate-900 dark:text-white border-b-2 border-[#ff453a]"
-                        : "text-slate-400 dark:text-slate-600 hover:text-slate-500 hover:border-b hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer"
-                    }`}
-                  >
-                    Login
-                  </button>
-                  <button
-                    onClick={() => {
-                      setAuthMode("signup");
-                      setAuthError("");
-                    }}
-                    className={`flex-1 pb-2 font-bold uppercase tracking-wider text-center ${
-                      authMode === "signup"
-                        ? "text-slate-900 dark:text-white border-b-2 border-[#ff453a]"
-                        : "text-slate-400 dark:text-slate-600 hover:text-slate-500 hover:border-b hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer"
-                    }`}
-                  >
-                    Register
-                  </button>
-                </div>
-
-                <form onSubmit={authMode === "login" ? handleLogin : handleRegister} className="space-y-3">
-                  {authMode === "signup" && (
-                    <div className="space-y-1 text-left">
-                      <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">Full Name</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. John Doe"
-                        className="w-full bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-slate-800 p-2 rounded-lg text-xs outline-none text-slate-800 dark:text-white focus:border-slate-400 dark:focus:border-slate-600 transition-all"
-                        value={authName}
-                        onChange={(e) => setAuthName(e.target.value)}
-                        required
-                      />
-                    </div>
+                {/* Google Sign-In Button */}
+                <button
+                  type="button"
+                  disabled={authLoading}
+                  onClick={handleGoogleSignIn}
+                  className="w-full bg-[#1a73e8] hover:bg-[#1a73e8]/90 text-white font-display font-bold uppercase tracking-wider py-3.5 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-md font-mono disabled:opacity-50"
+                  id="google-signin-btn"
+                >
+                  {authLoading ? (
+                    <RefreshCw className="w-4 h-4 mr-2.5 animate-spin" />
+                  ) : (
+                    <GoogleIcon />
                   )}
-
-                  <div className="space-y-1 text-left">
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">Email Address</label>
-                    <input
-                      type="email"
-                      placeholder="e.g. your@email.com"
-                      className="w-full bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-slate-800 p-2 rounded-lg text-xs outline-none text-slate-800 dark:text-white focus:border-slate-400 dark:focus:border-slate-600 transition-all"
-                      value={authEmail}
-                      onChange={(e) => setAuthEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-1 text-left">
-                    <label className="text-[9px] font-bold uppercase tracking-wider text-slate-400 font-mono">Password</label>
-                    <input
-                      type="password"
-                      placeholder="••••••••"
-                      className="w-full bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-slate-800 p-2 rounded-lg text-xs outline-none text-slate-800 dark:text-white focus:border-slate-400 dark:focus:border-slate-600 transition-all"
-                      value={authPassword}
-                      onChange={(e) => setAuthPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    disabled={authLoading}
-                    className="w-full bg-[#ff453a] hover:bg-[#ff453a]/90 text-white font-bold py-2.5 rounded-lg text-xs uppercase tracking-wider active:scale-95 transition-all shadow-sm cursor-pointer font-mono disabled:opacity-50 flex items-center justify-center"
-                  >
-                    {authLoading ? (
-                      <RefreshCw className="w-4 h-4 animate-spin" />
-                    ) : (
-                      authMode === "login" ? "Sign In" : "Create Account"
-                    )}
-                  </button>
-                </form>
+                  Continue with Google
+                </button>
 
                 <div className="relative flex py-1 items-center">
                   <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
@@ -6532,23 +6456,21 @@ export default function App() {
                   <div className="flex-grow border-t border-slate-200 dark:border-slate-800"></div>
                 </div>
 
-                <div className="space-y-3">
-                  {/* Google Sign-In Button */}
-                  <button
-                    type="button"
-                    disabled={authLoading}
-                    onClick={handleGoogleSignIn}
-                    className="w-full bg-white hover:bg-slate-50 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-850 dark:text-white border border-slate-300 dark:border-slate-800 font-display font-bold uppercase tracking-wider py-3 rounded-lg text-xs active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-sm font-mono disabled:opacity-50"
-                    id="google-signin-btn"
-                  >
-                    {authLoading ? (
-                      <RefreshCw className="w-4 h-4 mr-2.5 animate-spin text-slate-500" />
-                    ) : (
-                      <GoogleIcon />
-                    )}
-                    Continue with Google
-                  </button>
-                </div>
+                {/* Try Demo Button */}
+                <button
+                  type="button"
+                  disabled={authLoading}
+                  onClick={handleDemoSignIn}
+                  className="w-full bg-white hover:bg-slate-50 text-slate-700 dark:bg-slate-900 dark:hover:bg-slate-850 dark:text-white border border-slate-300 dark:border-slate-800 font-display font-bold uppercase tracking-wider py-3.5 rounded-xl text-xs active:scale-95 transition-all flex items-center justify-center cursor-pointer shadow-sm font-mono disabled:opacity-50"
+                  id="demo-signin-btn"
+                >
+                  {authLoading ? (
+                    <RefreshCw className="w-4 h-4 mr-2.5 animate-spin text-slate-500" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 mr-2.5 text-[#ff453a]" />
+                  )}
+                  Try Demo (No Sign-In Required)
+                </button>
               </div>
             </motion.div>
           </div>

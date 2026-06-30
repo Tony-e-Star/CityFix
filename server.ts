@@ -326,29 +326,53 @@ async function syncFromFirestore() {
 }
 
 function loadUsers(): User[] {
+  let loadedUsers: User[] = [];
   try {
     if (fs.existsSync(USERS_FILE)) {
       const data = fs.readFileSync(USERS_FILE, "utf-8");
-      return JSON.parse(data);
+      loadedUsers = JSON.parse(data);
     }
   } catch (error) {
     console.error("Error reading users file:", error);
   }
-  // Initial seed users
-  const initialUsers: User[] = [
-    {
-      id: "USR-11111111111",
-      email: "test@example.com",
-      name: "Test User",
-      passwordHash: hashPassword("password123", "default_salt_test"),
-      passwordSalt: "default_salt_test",
+
+  if (loadedUsers.length === 0) {
+    loadedUsers = [
+      {
+        id: "USR-11111111111",
+        email: "test@example.com",
+        name: "Test User",
+        passwordHash: hashPassword("password123", "default_salt_test"),
+        passwordSalt: "default_salt_test",
+        createdAt: new Date().toISOString(),
+        points: 840,
+        badges: ["First Resp", "Civic Vett"]
+      }
+    ];
+  }
+
+  // Ensure the shared demo user account exists
+  const hasDemo = loadedUsers.some(u => u.email === "demo@cityfix.app");
+  if (!hasDemo) {
+    loadedUsers.push({
+      id: "USR-DEMO-ACCOUNT",
+      email: "demo@cityfix.app",
+      name: "Demo Judge",
+      passwordHash: hashPassword("demopassword123", "demo_salt_secure"),
+      passwordSalt: "demo_salt_secure",
       createdAt: new Date().toISOString(),
-      points: 840,
-      badges: ["First Resp", "Civic Vett"]
-    }
-  ];
-  saveUsers(initialUsers);
-  return initialUsers;
+      points: 450,
+      badges: ["First Resp", "Civic Vett", "Fix Hero"],
+      savedLocation: {
+        address: "100 Pine St, San Francisco, CA 94111",
+        lat: 37.7925,
+        lng: -122.3999
+      }
+    });
+    saveUsers(loadedUsers);
+  }
+
+  return loadedUsers;
 }
 
 function saveUsers(data: User[]) {
@@ -429,19 +453,90 @@ function calculateUserPoints(userId: string, reportsList: CivicReport[]): { poin
 }
 
 function loadReports(): CivicReport[] {
+  let loadedReports: CivicReport[] = [];
   try {
     if (fs.existsSync(REPORTS_FILE)) {
       const data = fs.readFileSync(REPORTS_FILE, "utf-8");
-      return JSON.parse(data);
+      loadedReports = JSON.parse(data);
     }
   } catch (error) {
     console.error("Error reading reports file:", error);
   }
+
+  // Ensure there are at least some demo reports owned by USR-DEMO-ACCOUNT
+  const hasDemoReports = loadedReports.some(r => r.userId === "USR-DEMO-ACCOUNT");
+  if (!hasDemoReports) {
+    const demoReports: CivicReport[] = [
+      {
+        id: "REP-DEMO-1",
+        category: "Pothole",
+        confidence: 98,
+        description: "Deep pothole on the main street blocking the right lane. Causing traffic and danger to bicyclists.",
+        status: "In Review",
+        latitude: 37.7925,
+        longitude: -122.3999,
+        address: "100 Pine St, San Francisco, CA 94111",
+        imageData: "MOCK_POTHOLE_IMAGE",
+        imageHash: "demo_pothole_hash",
+        createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+        userId: "USR-DEMO-ACCOUNT",
+        userEmail: "demo@cityfix.app",
+        vouchCount: 5,
+        vouchedUserIds: ["USR-11111111111"],
+        flagCount: 0,
+        flaggedUserIds: [],
+        assignedDepartment: "Department of Public Works",
+        isDuplicate: false
+      },
+      {
+        id: "REP-DEMO-2",
+        category: "Broken Streetlight",
+        confidence: 100,
+        description: "Streetlight has been flickering or completely dark for the past week, making the intersection unsafe at night.",
+        status: "Resolved",
+        latitude: 37.7915,
+        longitude: -122.4010,
+        address: "150 Pine St, San Francisco, CA 94111",
+        imageData: "MOCK_RESOLVED_STREETLIGHT",
+        imageHash: "demo_light_hash",
+        createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+        userId: "USR-DEMO-ACCOUNT",
+        userEmail: "demo@cityfix.app",
+        vouchCount: 8,
+        vouchedUserIds: ["USR-11111111111"],
+        flagCount: 0,
+        flaggedUserIds: [],
+        assignedDepartment: "Department of Electricity",
+        isDuplicate: false
+      },
+      {
+        id: "REP-DEMO-3",
+        category: "Water Leak",
+        confidence: 95,
+        description: "Main line water leak bubbling up through the pavement seam next to the curb.",
+        status: "In Review",
+        latitude: 37.7930,
+        longitude: -122.3990,
+        address: "50 Pine St, San Francisco, CA 94111",
+        imageData: "MOCK_WATER_LEAK_IMAGE",
+        imageHash: "demo_water_hash",
+        createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
+        userId: "USR-DEMO-ACCOUNT",
+        userEmail: "demo@cityfix.app",
+        vouchCount: 2,
+        vouchedUserIds: ["USR-11111111111"],
+        flagCount: 0,
+        flaggedUserIds: [],
+        assignedDepartment: "Water Department",
+        isDuplicate: false
+      }
+    ];
+
+    loadedReports.push(...demoReports);
+    saveReports(loadedReports);
+  }
   
-  // Seed initial reports with consistent user ownership (Alex, Satoshi, Jane, Test User)
-  const initialReports: CivicReport[] = [];
-  saveReports(initialReports);
-  return initialReports;
+  return loadedReports;
 }
 
 function saveReports(data: CivicReport[]) {
